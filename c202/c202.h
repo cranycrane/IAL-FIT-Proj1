@@ -16,7 +16,7 @@
 #include <stdbool.h>
 
 /**
- * Hodnota MAX_STACK udává skutečnou velikost statického pole pro uložení
+ * Hodnota MAX_STACK udává skutečnou velikost dynamického pole pro uložení
  * hodnot zásobníku.
  * Při implementaci hodnotu MAX_STACK vůbec nepoužívejte.
  */
@@ -43,7 +43,7 @@ extern bool solved;
 /** Chyba při Stack_Top. */
 #define SERR_TOP    3
 
-/** ADT zásobník implementovaný ve statickém poli. */
+/** ADT zásobník implementovaný v dynamickém poli. */
 typedef struct {
 	/** Pole pro uložení hodnot. */
 	char *array;

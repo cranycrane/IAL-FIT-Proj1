@@ -5,6 +5,7 @@ PROG=$(PROJECT)-test
 C202_DEPENDENCY=../c202/c202.c
 CC=gcc
 CFLAGS=-std=c99 -Wall -Wextra -pedantic -lm -fcommon
+SHELL=bash
 
 .PHONY: all run tests clean purge
 
@@ -12,23 +13,25 @@ all: $(PROG)
 
 run: $(PROG)
 	@./$(PROG) > current-test.out
-	@echo "\nTest output differences:"
-	@diff -u --report-identical-files --text --color $(PROG).out current-test.out
+	@echo -e "\nTest output differences:"
+	@diff -u --report-identical-files --text $(PROG).out current-test.out
 	@rm -f current-test.out
 
 $(PROJECT)-test: $(PROJECT).c $(PROJECT)-test.c $(PROJECT)-test-utils.c $(C202_DEPENDENCY)
 	$(CC) $(CFLAGS) -o $@ $(PROJECT).c $(PROJECT)-test.c $(PROJECT)-test-utils.c $(C202_DEPENDENCY)
 
 $(PROJECT)-test.out: $(PROJECT)-test
+	@if [ -f $(PROJECT)-test.out ]; then echo "The reference output already exists!"; exit 1; fi
 	./$(PROJECT)-test > $(PROJECT)-test.out
 
 $(PROJECT)-test-advanced: $(PROJECT).c $(PROJECT)-test-advanced.c $(PROJECT)-test-utils.c $(C202_DEPENDENCY)
 	$(CC) $(CFLAGS) -o $@ $(PROJECT).c $(PROJECT)-test-advanced.c $(PROJECT)-test-utils.c $(C202_DEPENDENCY)
 
 $(PROJECT)-test-advanced.out: $(PROJECT)-test-advanced
+	@if [ -f $(PROJECT)-test-advanced.out ]; then echo "The reference output already exists!"; exit 1; fi
 	./$(PROJECT)-test-advanced > $(PROJECT)-test-advanced.out
 
-tests: $(TEST_OUTPUTS)
+reference: $(TEST_OUTPUTS)
 
 zadani: $(PROJECT)-test.out
 	@mkdir $@ 2>/dev/null || echo "Directory exists, continuing"

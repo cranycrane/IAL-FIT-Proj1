@@ -95,7 +95,7 @@ void DLL_Dispose( DLList *list ) {
 
 	DLLElementPtr previousElement = list->firstElement;
 	DLLElementPtr nextElement = previousElement->nextElement;
-	
+	// dokud neni nasledujici element NULL
 	while(nextElement != NULL) {
 		free(previousElement);
 		previousElement = nextElement;
@@ -245,13 +245,15 @@ void DLL_DeleteFirst( DLList *list ) {
 	if (first == list->lastElement) {
 		list->firstElement = NULL;
 		list->lastElement = NULL;
+		free(first);
+		return;
 	}
 	// prvni prvek je zaroven aktivni
-	else if (list->firstElement == list->activeElement) {
+	if (list->firstElement == list->activeElement) {
 		list->activeElement = NULL;
 	}
-	// mame v seznamu 1 a vice prvku
-	else {
+
+	if (first != list->lastElement) {
 		list->firstElement = list->firstElement->nextElement;
 		list->firstElement->previousElement = NULL;
 	}
@@ -272,15 +274,19 @@ void DLL_DeleteLast( DLList *list ) {
 	}
 
 	DLLElementPtr last = list->lastElement;
-
+	// pokud je posledni zaroven prvni
 	if (last == list->firstElement) {
 		list->firstElement = NULL;
 		list->lastElement = NULL;
+		free(last);
+		return;
 	}
-	else if (list->lastElement == list->activeElement) {
+	// posledni element je aktivni
+	if (list->lastElement == list->activeElement) {
 		list->activeElement = NULL;
 	}
-	else {
+	// v seznamu je vice nez 1 prvek
+	if (last != list->firstElement) {
 		list->lastElement = list->lastElement->previousElement;
 		list->lastElement->nextElement = NULL;
 	}
@@ -296,16 +302,19 @@ void DLL_DeleteLast( DLList *list ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  */
 void DLL_DeleteAfter( DLList *list ) {
+	// aktivni prvek nesmi byt NULL, nebo zaroven poslednim prvkem
 	if (list->activeElement == NULL || list->activeElement == list->lastElement) {
 		return;
 	}
 
 	DLLElementPtr deletedElement = list->activeElement->nextElement;
-
+	// pokud je mazanym prvkem zaroven posledni
 	if (deletedElement == list->lastElement) {
+		// nastavim nasledujici prvek prvku predesleho na null
 		deletedElement->previousElement->nextElement = NULL;
 		list->lastElement = deletedElement->previousElement;
 	}
+	// zmenim ukazatele pred a za mazanym prvkem
 	else {
 		deletedElement->previousElement->nextElement = deletedElement->nextElement;
 		deletedElement->nextElement->previousElement = deletedElement->previousElement;
@@ -322,17 +331,19 @@ void DLL_DeleteAfter( DLList *list ) {
  * @param list Ukazatel na inicializovanou strukturu dvousměrně vázaného seznamu
  */
 void DLL_DeleteBefore( DLList *list ) {
+	// aktivni prvek nesmi byt NULL, nebo zaroven prvnim prvkem
 	if (list->activeElement == NULL || list->activeElement == list->firstElement) {
 		return;
 	}
 
 	DLLElementPtr deletedElement = list->activeElement->previousElement;
-
+	// pokud je mazanym prvkem zaroven prvni
 	if (deletedElement == list->firstElement) {
 		deletedElement->nextElement->previousElement = NULL;
 		list->firstElement = deletedElement->nextElement;
 	}
 	else {
+		// zmenim ukazatele pred a za mazanym prvkem
 		deletedElement->nextElement->previousElement = deletedElement->previousElement;
 		deletedElement->previousElement->nextElement = deletedElement->nextElement;
 	}

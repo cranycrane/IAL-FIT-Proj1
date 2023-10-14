@@ -71,3 +71,7 @@ Is stack full? Yes
 STACK: BOTTOM [ a b c d e f g h ] TOP
 STACK: NOT INITIALISED
 
+
+[test_many] many things
+all done
+

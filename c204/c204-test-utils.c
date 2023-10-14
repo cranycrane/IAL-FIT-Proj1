@@ -10,7 +10,7 @@ bool solved;
 bool convert( char* infExpr, char **postExpr ) {
 	solved = true;
 
-	/* Print expression to be convert */
+	/* Print expression to be converted */
 	printf("Provided infix  : %s\n", infExpr);
 
 	/* Perform conversion */
@@ -52,25 +52,25 @@ void verify( char *postExpr, char *postExprOk ) {
 			/* charater array doesn't contain zero character,
 			 * this case probably never happens (zero character is often present in unitialized array) */
 			printf("ERROR: String appears to be too long (exceeds %d characters).\n", MAX_LEN - 1);
-			printf("   Haven't you forgotten to include zero character?\n\n");
+			printf("   Haven't you forgotten to include zero character?\n");
 		}
 		else
 		{
 			/* string is OK in C language meaning */
 			/* Print converted expression and conversion result */
-			printf("Expected postfix: %s\n", postExpr);
+			printf("Expected postfix: %s\n", postExprOk);
 
 			/* Test strings match */
 			if (strcmp(postExpr, postExprOk) != 0)
 			{
 				/* conversion test failed */
 				printf("Result postfix  : %s\n", postExpr);
-				printf("Conversion match: FAILED\n\n");
+				printf("Conversion match: FAILED\n");
 			}
 			else
 			{
 				/* conversion is finally OK */
-				printf("Conversion match: OK\n\n");
+				printf("Conversion match: OK\n");
 			}
 		}
 

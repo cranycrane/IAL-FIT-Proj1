@@ -57,20 +57,19 @@ void untilLeftPar( Stack *stack, char *postfixExpression, unsigned *postfixExpre
 	char stackTop;
 
 	while(!Stack_IsEmpty(stack)) {
-		// ulozime znak ze zasobniku 
+		// ulozime znak ze zasobniku do pomocne promenne
 		Stack_Top(stack, &stackTop);
 		// jestli zavorka, tak koncime
 		if (stackTop == '(') {
 			Stack_Pop(stack);
 			return;
 		}
-
+		// dame operand do postFix vyrazu a inkrementujeme delku
 		postfixExpression[*postfixExpressionLength] = stackTop;
 		++*postfixExpressionLength;
-
+		// odstranime pridany operand ze zasobniku
 		Stack_Pop(stack);
 	}
-	return;
 }
 
 /**
@@ -91,22 +90,25 @@ void untilLeftPar( Stack *stack, char *postfixExpression, unsigned *postfixExpre
  */
 void doOperation( Stack *stack, char c, char *postfixExpression, unsigned *postfixExpressionLength ) {
 	char stackTop;
-
+	// zasobnik je prazdny, muzeme pushnout
 	if (Stack_IsEmpty(stack)) {
 		Stack_Push(stack, c);
 		return;
 	}
-
+	// do pomocne promenne dame aktualni operator na vrcholu zasobniku
 	Stack_Top(stack, &stackTop);
-
+	// pokud je operator vyssi precedence, vlozime na zasobnik
 	if ((c == '*' || c == '/') && (stackTop == '+' || stackTop == '-')) {
 		Stack_Push(stack, c);
 		return;
 	}
+	// na vrcholu je zavorka, muzeme vlozit na zasobnik
 	else if (stackTop == '(') {
 		Stack_Push(stack, c);
 		return;
 	}
+	// na vrcholu je operator stejne nebo vyssi precedence, z vrcholu operator vlozime do
+	// postfix vyrazu a rekurzivne opakujeme, dokud se nepodari operator na zasobnik vlozit
 	else {
 		postfixExpression[*postfixExpressionLength] = stackTop;
 		++*postfixExpressionLength;
@@ -166,8 +168,10 @@ void doOperation( Stack *stack, char c, char *postfixExpression, unsigned *postf
  * @returns znakový řetězec obsahující výsledný postfixový výraz
  */
 char *infix2postfix( const char *infixExpression ) {
+	// inicializace postfix vyrazu
 	char *postFixExpression = (char *)malloc(sizeof(char)*MAX_LEN);
 	unsigned postFixExpressionLength = 0;
+
 	if (postFixExpression == NULL) return NULL;
 
 	Stack *stack = (Stack*)malloc(sizeof(Stack));
@@ -179,18 +183,22 @@ char *infix2postfix( const char *infixExpression ) {
 	Stack_Init(stack);
 
 	for (int i = 0; infixExpression[i] != '\0'; i++) {
+		// pokud mam v infixvyrazu operand, vlozim do postfix vyrazu
 		if ((infixExpression[i] >= '0' && infixExpression[i] <= '9') ||
 			(infixExpression[i] >= 'a' && infixExpression[i] <= 'z') ||
 			(infixExpression[i] >= 'A' && infixExpression[i] <= 'Z')) {
 				postFixExpression[postFixExpressionLength] = infixExpression[i];
 				++postFixExpressionLength;
 			}
+		// mam pravou zavorku, muzu vytopovat a vypopovat vsechny operandy az po levou zavorku
 		else if (infixExpression[i] == ')') {
 			untilLeftPar(stack, postFixExpression, &postFixExpressionLength);
 		}
+		// levou zavorku dam na zasobnik
 		else if (infixExpression[i] == '(') {
 			Stack_Push(stack, infixExpression[i]);
 		}
+		// rovna se - jsem na konci, muzu dat vsechny operandy ze zasobniku do postfixu a ukoncit cyklus
 		else if (infixExpression[i] == '=') {
 			while (!Stack_IsEmpty(stack)) {
 				Stack_Top(stack, &postFixExpression[postFixExpressionLength]);
@@ -201,14 +209,15 @@ char *infix2postfix( const char *infixExpression ) {
 			++postFixExpressionLength;
 			break;
 		}
+		// mam operand, volam pomocnou funkci
 		else if (infixExpression[i] == '+' || infixExpression[i] == '-' || infixExpression[i] == '*' || infixExpression[i] == '/'){
 			doOperation(stack, infixExpression[i], postFixExpression, &postFixExpressionLength);
 		}
 	}
-
+	// uvolneni prostredku
 	Stack_Dispose(stack);
 	free(stack);
-
+	// koncovy znak retezce
 	postFixExpression[postFixExpressionLength] = '\0';
 
 	return postFixExpression;
@@ -229,12 +238,13 @@ char *infix2postfix( const char *infixExpression ) {
 void expr_value_push( Stack *stack, int value ) {
 
 	char byte[4];
+	// provedu bitove posuny
 	byte[0] = (value >> 24) & 0xFF;
 	byte[1] = (value >> 16) & 0xFF;
 	byte[2] = (value >> 8) & 0xFF;
 	byte[3] = value & 0xFF;
 
-	//char *bytePtr = (char *)&value;
+	// a postupne vlozim na zasobnik
 	for (unsigned i = 0; i < sizeof(int); i++) {
 		Stack_Push(stack, byte[i]);
 	}
@@ -256,10 +266,12 @@ void expr_value_pop( Stack *stack, int *value ) {
 	*value = 0;
 
 	char byte;
-
+	//
 	for (unsigned i = 0; i < sizeof(int); i++) {
 		Stack_Top(stack, &byte);
-
+		// provedu OR operaci nad bitove posunutym "byte" nad kterou 
+		// je použity AND pro zachování dolních 8 bitů a nastavení ostatních na 0
+		// poté je posunutý o i*8, podle toho o kolik bitů potřebujeme posunout
 		*value |= ((int)byte & 0xFF) << (i * 8);
 
 		Stack_Pop(stack);
@@ -268,7 +280,9 @@ void expr_value_pop( Stack *stack, int *value ) {
 }
 
 VariableValue *processOperand(char operand, VariableValue variableValues[], int variableValueCount) {
+	// prochazim vsechnz variablevalues
 	for (int i = 0; i < variableValueCount; i++) {
+		// nasel jsem, vracim jeho hodnotu
 		if (operand == variableValues[i].name) {
 			return &variableValues[i];
 		}
@@ -276,34 +290,41 @@ VariableValue *processOperand(char operand, VariableValue variableValues[], int 
 	return NULL;
 }
 
-int processOperator(Stack *stack, char operator) {
+int processOperator(Stack *stack, char operator, int *result) {
 	int firstOperand;
 	int secondOperand;
-
+	// ulozim hodnoty posledních dvou operandů ze stacku
 	expr_value_pop(stack, &secondOperand);
 	expr_value_pop(stack, &firstOperand);
-
+	// a provedu operaci podle operatoru
 	switch(operator) {
 		case '+':
-			return firstOperand + secondOperand;
+			*result = firstOperand + secondOperand;
+			return 0;
 			break;
 		case '-':
-			return firstOperand - secondOperand;
+			*result = firstOperand - secondOperand;
+			return 0;
 			break;
 		case '*':
-			return firstOperand * secondOperand;
+			*result = firstOperand * secondOperand;
+			return 0;
 			break;
 		case '/':
-			return firstOperand / secondOperand;
+			if (secondOperand == 0) return 1;
+			*result = firstOperand / secondOperand;
+			return 0;
 			break;
 		default:
 			fprintf(stderr, "Znak operace nenalezen");
+			return 1;
 	}
 
-	return -1;
+	return 1;
 }
 
 int countExpressionLength(char *expression) {
+	// spocita delku vyrazu
 	int counter = 0;
 	while(expression[counter] != '\0') counter++;
 	return counter;
@@ -337,28 +358,39 @@ bool eval( const char *infixExpression, VariableValue variableValues[], int vari
 
 	Stack *stack = (Stack*)malloc(sizeof(Stack));
 
+	if (stack == NULL) return false;
+
 	Stack_Init(stack);
 
 	int result = 0;
 
 	for (int i = 0; postFixExpression[i] != '\0'; i++) {
+		// pokud mam v infix vyrazu operand, najdu jeho hodnotu a ulozim na zasobnik
 		if ((postFixExpression[i] >= '0' && postFixExpression[i] <= '9') ||
 			(postFixExpression[i] >= 'a' && postFixExpression[i] <= 'z') ||
 			(postFixExpression[i] >= 'A' && postFixExpression[i] <= 'Z')) {
 				VariableValue *currentOperand = processOperand(postFixExpression[i], variableValues, variableValueCount);
 				if (currentOperand == NULL) {
 					fprintf(stderr, "CHYBA: Operand nenalezen");
-					Stack_Dispose(stack);
+						Stack_Dispose(stack);
+						free(stack);
+						free(postFixExpression);
 					return false;
 				}
 				expr_value_push(stack, currentOperand->value);
 			}
+		// nasel jsem operator, zpracuju dva posledni operandy a vysledek ulozim zpet na zasobnik
 		else if (postFixExpression[i] == '+' || postFixExpression[i] == '-' || postFixExpression[i] == '*' || postFixExpression[i] == '/'){
-			result = processOperator(stack, postFixExpression[i]);
+			if (processOperator(stack, postFixExpression[i], &result) == 1) {
+				Stack_Dispose(stack);
+				free(stack);
+				free(postFixExpression);
+				return false;
+			}
 			expr_value_push(stack, result);
 		}
 	}
-
+	// ulozim vysledek a uvolnim prostredky
 	*value = result;
 	Stack_Dispose(stack);
 	free(stack);
